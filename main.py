@@ -1,5 +1,5 @@
 from data.breastcancer import get_data
-from alg.lassoregression.admm import ADMM
+from alg.lassoregression.admmvpp import ADMM
 
 
 if __name__ == '__main__':
