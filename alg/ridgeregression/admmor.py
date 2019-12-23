@@ -2,6 +2,7 @@
 
 import numpy as np
 from math import sqrt
+import random
 import matplotlib.pyplot as plt
 #from scipy.interpolate import spline
 
@@ -80,44 +81,52 @@ def ADMM(x, alpha, landa, A, b, error, beta, z):
     print("x的取值的迭代过程：")
     print(x)
     obj = []
+    p = random.uniform(1.5, 1.8)
     I = np.identity(len(A[0]))
+    zero=np.zeros(len(b))
+    zero=zero.T
+    
     while (1):
-        part_1 = np.linalg.inv(alpha * (A.T @ A) + beta + I)
+        part_1 = np.linalg.inv(alpha * (A.T @ A) + beta * I)
         part_2 = alpha * (A.T @ b) + beta * z - landa
         xx = part_1 @ part_2
-        zz = (landa + beta * xx) / (2 + beta)
-        landalanda = landa + beta * (xx - zz)
-
-        xzk = np.vstack((x, z))
-        xzkp = np.vstack((xx, zz))
+        zz = (landa + beta * (xx * p - (1 - p) * z)) / (2 + beta)
+        landalanda = landa + beta * (p * xx - (1 - p) * z - zz)
 
         red = np.linalg.norm(
             xx, ord=1) + (alpha / 2) * np.linalg.norm(A @ xx - b)**2
         obj.append(red)
         print('The %dth iteration, target value is %f' % (k, red))
-
+        '''
+        xzk = np.vstack((x, z))
+        xzkp = np.vstack((xx, zz))
         e = np.linalg.norm(xzk - xzkp)
         if e <= error:
             break
+        '''
+        if stop(I,xx,-I,zz,z,zero,landalanda,alpha):
+            break
         else:
-            r = xx - zz
-            s = -1 * alpha * (zz - z)
-            u = 10
-            t_incr = 2
-            t_decr = t_incr
-            if np.linalg.norm(s, ord=2) > u * np.linalg.norm(r, ord=2):
-                print('penalty parameter increase')
-                alpha = alpha * t_incr
-            elif np.linalg.norm(s, ord=2) > u * np.linalg.norm(r, ord=2):
-                print('penalty parameter decrease')
-                alpha = alpha / t_decr
             x = np.copy(xx)
             z = np.copy(zz)
             landa = np.copy(landalanda)
             print('The current x is: ', x)
-            k += 1
+        k += 1
+        
     return xx, k, obj
 
+def stop(A,xx,B,zz,z,b,landalanda,alpha):
+    rr=A @ xx + B * zz - b
+    ss=alpha * (A.T @ B @ (zz-z))
+    n=xx.shape[0]
+    epr=0.001
+    epa=1
+    epp=sqrt(n)*epa + epr * max(np.linalg.norm(A @ xx), np.linalg.norm(B @ zz), np.linalg.norm(b))
+    epd=sqrt(n)*epa + epr * np.linalg.norm(A.T @ landalanda)
+    if np.linalg.norm(rr,ord=2) <= epp and np.linalg.norm(ss,ord=2) <= epd:
+        return True
+    else:
+        return False
 
 def draw(obj):
     x = np.zeros(len(obj))
@@ -136,15 +145,13 @@ def draw(obj):
 
 def main():
     #SD:
-    '''
-    x = np.array([[1.]])
-    alpha=0.1
-    landa=0.5
-    A = np.array([[1.]])
-    b = np.array([[.2]])
-    error=0.0001
-    xx,count,obj=SD(x,alpha,landa,A,b,error)
-    '''
+    # x = np.array([[1.]])
+    # alpha=0.1
+    # landa=0.5
+    # A = np.array([[1.]])
+    # b = np.array([[.2]])
+    # error=0.0001
+    # xx,count,obj=SD(x,alpha,landa,A,b,error)
     #BFGS:
 
     # x = np.array([[1.]])

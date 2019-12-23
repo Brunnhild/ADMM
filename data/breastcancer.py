@@ -4,7 +4,7 @@ import numpy as np
 
 def get_data():
     #一共32个属性，删除了ID属性，并将肿瘤类型对应的文本属性换成了数字其中M--1，B--0，根据31个属性预测患乳腺癌的风险,
-    train_data_all = np.array(pd.read_csv('BreastCancer/wdbc.csv'))
+    train_data_all = np.array(pd.read_csv('data/BreastCancer/wdbc.csv'))
     train_data = np.array(train_data_all[:, 1:-1])  #属性
     train_score1 = np.array(train_data_all[:, -1])
     train_score = []
@@ -19,4 +19,4 @@ def get_data():
         train_score.append(temp)
     train_score = np.array(train_score)  #风险结果
     train_score.reshape(-1, 1)
-    return train_data, train_score
+    return train_data.astype(np.float32), train_score.astype(np.float32)

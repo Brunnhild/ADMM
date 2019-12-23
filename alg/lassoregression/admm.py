@@ -2,8 +2,9 @@
 
 import numpy as np
 from math import sqrt
-import random
 import matplotlib.pyplot as plt
+from alg.utils import stop
+from alg.utils import draw
 #from scipy.interpolate import spline
 
 
@@ -32,13 +33,23 @@ def PGM(x, alpha, landa, A, b, error):
     return xx, k, obj
 
 
-def ADMM(x, alpha, landa, A, b, error, beta, z):
+def ADMM(A, b, alpha=0.1, beta=0.01, show_x=True, show_graph=True, log_int=1):
+    n = A.shape[1]
+    x = np.random.rand(n, 1)
+    z = np.random.rand(n, 1)
+    landa = np.random.rand(n, 1)
     k = 0
-    print("x的取值的迭代过程：")
-    print(x)
+    if show_x:
+        print("x starts with: ")
+        print(x)
+    red = np.linalg.norm(x, ord=1) + (alpha / 2) * np.linalg.norm(A @ x - b)**2
+    print('The initial target value is %f' % (red))
     obj = []
+    I = np.identity(n)
+    zero = np.zeros(n)
+    zero = zero.T
+
     while (1):
-        I = np.identity(len(A[0]))
         #print(I)
         #此处的landa是向量
         temp1 = np.linalg.inv(alpha * (A.T @ A) + beta * I)
@@ -48,61 +59,61 @@ def ADMM(x, alpha, landa, A, b, error, beta, z):
         xx = temp1 @ temp2
         #print(xx)
         zz = np.copy(z)
-        p = random.uniform(1.5, 1.8)
-        zz = np.sign(xx * p - (1 - p) * z + landa / beta) * np.maximum(
-            abs(p * xx - (1 - p) * z + landa / beta) - 1 / beta, 0)
 
-        landalanda = landa + beta * (xx * p - (1 - p) * z - zz)
+        zz = np.sign(xx + landa / beta) * np.maximum(
+            np.abs(xx + landa / beta) - 1 / beta, 0)
 
-        xzk = np.vstack((x, z))
-        xzkp = np.vstack((xx, zz))
+        landalanda = landa + beta * (xx - zz)
 
         red = np.linalg.norm(
             xx, ord=1) + (alpha / 2) * np.linalg.norm(A @ xx - b)**2
-        obj.append(red)
-        print('The %dth iteration, target value is %f' % (k, red))
-
+        if k % log_int == 0:
+            obj.append(red)
+        if k % log_int == 0:
+            print('The %dth iteration, target value is %f' % (k, red))
+        '''
+        xzk = np.vstack((x, z))
+        xzkp = np.vstack((xx, zz))
+        
         e = np.linalg.norm(xzk - xzkp)
-
+        
         if e <= error:
+            break
+        '''
+        if stop(I, xx, -I, zz, z, zero, landalanda, alpha):
             break
         else:
             x = np.copy(xx)
             z = np.copy(zz)
             landa = np.copy(landalanda)
-            print('The current x is: ', x)
+            if show_x:
+                print('The current x is: ', x)
         k += 1
+
+    print("Final x: ", xx)
+    print("Total steps: ", k)
+
+    if show_graph:
+        draw(obj, log_int)
+
     return xx, k, obj
 
 
-def draw(obj):
-    x = np.zeros(len(obj))
-    for i in range(len(obj)):
-        x[i] = i * 0.1
-    '''
-    x_new=np.linspace(x.min(),x.max(),300)
-    obj_smooth=spline(x,obj,x_new)
-    '''
-    plt.scatter(x, obj, c='black')
-    plt.plot(x, obj, linewidth=1)
-    #plt.plot(x_new,obj_smooth,c='red')
-    plt.ylabel('obj')
-    plt.show()
-
-
 def main():
-    # #PGM:
-    # x = np.array([[1.]])
-    # landa = 0.5
-    # alpha=0.1
-    # A = np.array([[1.]])
-    # b = np.array([[.2]])
-    # error=0.001
-    # xx,count,obj=PGM(x,alpha,landa,A,b,error)
-    # print(obj)
-    # draw(obj)
-
+    #PGM:
+    '''
+    x = np.array([[1.]])
+    landa = 0.5
+    alpha = 0.1
+    A = np.array([[1.]])
+    b = np.array([[.2]])
+    error = 0.001
+    xx, count, obj = PGM(x, alpha, landa, A, b, error)
+    print(obj)
+    draw(obj)
+    '''
     #ADMM
+
     x = np.array([[1.]])
     z = np.array([[1.]])
     landa = np.array([[1.]])
@@ -113,8 +124,6 @@ def main():
     beta = 0.01
     xx, count, obj = ADMM(x, alpha, landa, A, b, error, beta, z)
     draw(obj)
+
     print("最终迭代结果: x：", xx)
     print("共进行了", count, "次迭代")
-
-
-main()

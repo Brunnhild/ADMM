@@ -81,6 +81,9 @@ def ADMM(x, alpha, landa, A, b, error, beta, z):
     print(x)
     obj = []
     I = np.identity(len(A[0]))
+    zero = np.zeros(len(b))
+    zero = zero.T
+
     while (1):
         part_1 = np.linalg.inv(alpha * (A.T @ A) + beta * I)
         part_2 = alpha * (A.T @ b) + beta * z - landa
@@ -88,16 +91,19 @@ def ADMM(x, alpha, landa, A, b, error, beta, z):
         zz = (landa + beta * xx) / (2 + beta)
         landalanda = landa + beta * (xx - zz)
 
-        xzk = np.vstack((x, z))
-        xzkp = np.vstack((xx, zz))
-
         red = np.linalg.norm(
             xx, ord=1) + (alpha / 2) * np.linalg.norm(A @ xx - b)**2
         obj.append(red)
         print('The %dth iteration, target value is %f' % (k, red))
-
+        '''
+        xzk = np.vstack((x, z))
+        xzkp = np.vstack((xx, zz))
         e = np.linalg.norm(xzk - xzkp)
         if e <= error:
+            break
+        '''
+
+        if stop(I, xx, -I, zz, z, zero, landalanda, alpha):
             break
         else:
             x = np.copy(xx)
@@ -105,7 +111,23 @@ def ADMM(x, alpha, landa, A, b, error, beta, z):
             landa = np.copy(landalanda)
             print('The current x is: ', x)
         k += 1
+
     return xx, k, obj
+
+
+def stop(A, xx, B, zz, z, b, landalanda, alpha):
+    rr = A @ xx + B * zz - b
+    ss = alpha * (A.T @ B @ (zz - z))
+    n = xx.shape[0]
+    epr = 0.001
+    epa = 1
+    epp = sqrt(n) * epa + epr * max(np.linalg.norm(A @ xx),
+                                    np.linalg.norm(B @ zz), np.linalg.norm(b))
+    epd = sqrt(n) * epa + epr * np.linalg.norm(A.T @ landalanda)
+    if np.linalg.norm(rr) <= epp and np.linalg.norm(ss) <= epd:
+        return True
+    else:
+        return False
 
 
 def draw(obj):

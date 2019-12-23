@@ -36,13 +36,15 @@ def ADMM(x, alpha, landa, A, b, error, beta, z):
     print("x的取值的迭代过程：")
     print(x)
     obj = []
+    I = np.identity(len(A[0]))
+    zero=np.zeros(len(b))
+    zero=zero.T
+    
     while (1):
-        I = np.identity(len(A[0]))
-        #print(I)
         #此处的landa是向量
         temp1 = np.linalg.inv(alpha * (A.T @ A) + beta * I)
         #print(temp1)
-        temp2 = alpha * (A.T @ b) + beta * z - landa
+        temp2 = alpha * (A.T @ b) + beta * z - landa  #纳姆达==landa
 
         xx = temp1 @ temp2
         #print(xx)
@@ -53,26 +55,52 @@ def ADMM(x, alpha, landa, A, b, error, beta, z):
 
         landalanda = landa + beta * (xx - zz)
 
-        xzk = np.vstack((x, z))
-        xzkp = np.vstack((xx, zz))
-
         red = np.linalg.norm(
             xx, ord=1) + (alpha / 2) * np.linalg.norm(A @ xx - b)**2
         obj.append(red)
         print('The %dth iteration, target value is %f' % (k, red))
-
+        '''
+        xzk = np.vstack((x, z))
+        xzkp = np.vstack((xx, zz))
         e = np.linalg.norm(xzk - xzkp)
 
         if e <= error:
             break
+        '''
+        if stop(I,xx,-I,zz,z,zero,landalanda,alpha):
+            break
         else:
+            r = xx - zz
+            s = -1 * alpha * (zz - z)
+            u = 10
+            t_incr = 2
+            t_decr = t_incr
+            if np.linalg.norm(r, ord=2) > u * np.linalg.norm(s, ord=2):
+                print('penalty parameter increase')
+                beta = beta * t_incr
+            elif np.linalg.norm(s, ord=2) > u * np.linalg.norm(r, ord=2):
+                print('penalty parameter decrease')
+                beta = beta / t_decr
             x = np.copy(xx)
             z = np.copy(zz)
             landa = np.copy(landalanda)
             print('The current x is: ', x)
-        k += 1
+            k += 1
+            
     return xx, k, obj
 
+def stop(A,xx,B,zz,z,b,landalanda,alpha):
+    rr=A @ xx + B * zz - b
+    ss=alpha * (A.T @ B @ (zz-z))
+    n=xx.shape[0]
+    epr=0.001
+    epa=1
+    epp=sqrt(n)*epa + epr * max(np.linalg.norm(A @ xx), np.linalg.norm(B @ zz), np.linalg.norm(b))
+    epd=sqrt(n)*epa + epr * np.linalg.norm(A.T @ landalanda)
+    if np.linalg.norm(rr) <= epp and np.linalg.norm(ss) <= epd:
+        return True
+    else:
+        return False
 
 def draw(obj):
     x = np.zeros(len(obj))
@@ -93,25 +121,27 @@ def main():
     #PGM:
     # x = np.array([[1.]])
     # landa = 0.5
-    # alpha = 0.1
+    # alpha=0.1
     # A = np.array([[1.]])
     # b = np.array([[.2]])
-    # error = 0.001
-    # xx, count, obj = PGM(x, alpha, landa, A, b, error)
+    # error=0.001
+    # xx,count,obj=PGM(x,alpha,landa,A,b,error)
     # print(obj)
     # draw(obj)
 
     #ADMM
-    x = np.reshape(np.array(([1., 1., 1.])), (-1, 1))
-    z = np.reshape(np.array(([1., 1., 1.])), (-1, 1))
-    landa = np.reshape(np.array(([1., 1., 1.])), (-1, 1))
-    A = np.array([[1., 1., 1.], [1., 1., 1.], [1., 1., 1.]])
-    b = np.reshape(np.array(([2., 2., 2.])), (-1, 1))
-    alpha=0.1
-    error=0.01
-    beta=0.01
-    xx,count,obj=ADMM(x,alpha,landa,A,b,error,beta,z)
+
+    x = np.array([[1.]])
+    z = np.array([[1.]])
+    landa = np.array([[1.]])
+    A = np.array([[1.]])
+    b = np.array([[.2]])
+    alpha = 0.1
+    error = 0.01
+    beta = 0.01
+    xx, count, obj = ADMM(x, alpha, landa, A, b, error, beta, z)
     draw(obj)
+
     print("最终迭代结果: x：", xx)
     print("共进行了", count, "次迭代")
 
