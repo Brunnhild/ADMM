@@ -144,6 +144,3 @@ def main():
 
     print("最终迭代结果: x：", xx)
     print("共进行了", count, "次迭代")
-
-
-main()
