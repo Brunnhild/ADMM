@@ -8,7 +8,7 @@ def stop(A, xx, B, zz, z, b, landalanda, alpha):
     ss = alpha * (A.T @ B @ (zz - z))
     n = xx.shape[0]
     epr = 0.001
-    epa = 0.01
+    epa = 0.05
     epp = sqrt(n) * epa + epr * max(np.linalg.norm(A @ xx),
                                     np.linalg.norm(B @ zz), np.linalg.norm(b))
     epd = sqrt(n) * epa + epr * np.linalg.norm(A.T @ landalanda)

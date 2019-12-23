@@ -11,7 +11,7 @@ def ADMM(A, b, alpha=0.1, beta=0.01, show_x=True, show_graph=True, log_int=1):
     x = np.random.rand(n, 1)
     z = np.random.rand(n, 1)
     landa = np.random.rand(n, 1)
-    D = np.identity(len(A[0]))
+    D = np.identity(n)
     k = 0
     if show_x:
         print("x starts with: ")
@@ -22,14 +22,14 @@ def ADMM(A, b, alpha=0.1, beta=0.01, show_x=True, show_graph=True, log_int=1):
     print("x的取值的迭代过程：")
     print(x)
     obj = []
-    I = np.identity(len(A[0]))
-    zero=np.zeros(len(b))
+    I = np.identity(n)
+    zero=np.zeros(n)
     zero=zero.T
-    zeros=np.zeros((len(D[0]),len(D[0])))
+    zeros=np.zeros((n,n))
 
     while(1):
         temp1=np.linalg.inv(alpha * (A.T @ A) + D)
-        temp2=np.linalg.inv(alpha * (A.T @ b) + (D @ z) - landa)
+        temp2=alpha * (A.T @ b) + (D @ z) - landa
         xx=temp1 @ temp2
 
         temp1=np.linalg.inv(2*I + D)
@@ -51,16 +51,17 @@ def ADMM(A, b, alpha=0.1, beta=0.01, show_x=True, show_graph=True, log_int=1):
             u = 10
             t_incr = 2
             t_decr = t_incr
-            if np.linalg.norm(r, ord=2) > u * np.linalg.norm(s, ord=2):
-                print('penalty parameter increase')
-                D = D * t_incr
-            elif np.linalg.norm(s, ord=2) > u * np.linalg.norm(r, ord=2):
-                print('penalty parameter decrease')
-                D = D / t_decr
+            tmp = np.abs(r) - u * np.abs(s)
+            tmp = np.where(tmp > 0, t_incr, 1)
+            D *= tmp
+            tmp = np.abs(s) - u * np.abs(r)
+            tmp = np.where(tmp > 0, 1 / t_decr, 1)
+            D *= tmp
             x = np.copy(xx)
             z = np.copy(zz)
             landa = np.copy(landalanda)
-            print('The current x is: ', x)
+            if show_x:
+                print('The current x is: ', x)
             k += 1
     print("Final x: ", xx)
     print("Total steps: ", k)
@@ -85,6 +86,3 @@ def main():
     draw(obj)
     print("最终迭代结果: x：", xx)
     print("共进行了", count, "次迭代")
-
-
-main()

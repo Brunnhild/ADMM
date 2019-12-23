@@ -1,11 +1,7 @@
-#LASSO Regression
-
 import numpy as np
 from math import sqrt
 import matplotlib.pyplot as plt
-from alg.utils import stop
-from alg.utils import draw
-#from scipy.interpolate import spline
+from alg.utils import *
 
 
 def ADMM(A, b, alpha=0.1, beta=0.01, show_x=True, show_graph=True, log_int=1):
@@ -23,25 +19,21 @@ def ADMM(A, b, alpha=0.1, beta=0.01, show_x=True, show_graph=True, log_int=1):
     I = np.identity(n)
     zero = np.zeros(n)
     zero = zero.T
-
+    
     while (1):
-        #print(I)
-        #此处的landa是向量
-        temp1 = np.linalg.inv(alpha * (A.T @ A) + beta * I)
-        #print(temp1)
-        temp2 = alpha * (A.T @ b) + beta * z - landa
+        part_1 = np.linalg.inv(alpha * (A.T @ A) + (beta + 1.0 / beta) * I)
 
-        xx = temp1 @ temp2
-        #print(xx)
-        zz = np.copy(z)
+        part_2 = alpha * (A.T @ b) + beta * z - landa + (1.0 / beta) * x
 
-        zz = np.sign(xx + landa / beta) * np.maximum(
-            np.abs(xx + landa / beta) - 1 / beta, 0)
+        xx = part_1 @ part_2
 
-        landalanda = landa + beta * (xx - zz)
+        zz = (landa + beta * xx) / (2 + beta)
+
+        landalanda = landa - beta * np.abs(xx - zz)
 
         red = np.linalg.norm(
             xx, ord=1) + (alpha / 2) * np.linalg.norm(A @ xx - b)**2
+
         if k % log_int == 0:
             obj.append(red)
         if k % log_int == 0:
@@ -49,13 +41,12 @@ def ADMM(A, b, alpha=0.1, beta=0.01, show_x=True, show_graph=True, log_int=1):
         '''
         xzk = np.vstack((x, z))
         xzkp = np.vstack((xx, zz))
-        
+
         e = np.linalg.norm(xzk - xzkp)
-        
         if e <= error:
             break
         '''
-        if stop(I, xx, -I, zz, z, zero, landalanda, alpha):
+        if stop(I,xx,-I,zz,z,zero,landalanda,alpha):
             break
         else:
             x = np.copy(xx)
@@ -64,7 +55,7 @@ def ADMM(A, b, alpha=0.1, beta=0.01, show_x=True, show_graph=True, log_int=1):
             if show_x:
                 print('The current x is: ', x)
         k += 1
-
+    
     print("Final x: ", xx)
     print("Total steps: ", k)
 
@@ -72,33 +63,3 @@ def ADMM(A, b, alpha=0.1, beta=0.01, show_x=True, show_graph=True, log_int=1):
         draw(obj, log_int)
 
     return xx, k, obj
-
-
-def main():
-    #PGM:
-    '''
-    x = np.array([[1.]])
-    landa = 0.5
-    alpha = 0.1
-    A = np.array([[1.]])
-    b = np.array([[.2]])
-    error = 0.001
-    xx, count, obj = PGM(x, alpha, landa, A, b, error)
-    print(obj)
-    draw(obj)
-    '''
-    #ADMM
-
-    x = np.array([[1.]])
-    z = np.array([[1.]])
-    landa = np.array([[1.]])
-    A = np.array([[1.]])
-    b = np.array([[.2]])
-    alpha = 0.1
-    error = 0.01
-    beta = 0.01
-    xx, count, obj = ADMM(x, alpha, landa, A, b, error, beta, z)
-    draw(obj)
-
-    print("最终迭代结果: x：", xx)
-    print("共进行了", count, "次迭代")

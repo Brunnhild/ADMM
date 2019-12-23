@@ -9,75 +9,6 @@ from alg.utils import draw
 #from scipy.interpolate import spline
 
 
-def SD(x, alpha, landa, A, b, error):
-    k = 0
-    print("x的取值的迭代过程：")
-    print(x)
-    obj = []
-    while (1):
-        g = 2 * x + alpha * np.dot(A.T, np.dot(A, x) - b)
-        xx = x - landa * g
-
-        red = np.linalg.norm(xx)**2 + (alpha / 2) * np.linalg.norm(A @ xx -
-                                                                   b)**2
-        obj.append(red)
-        print('The %dth iteration, target value is %f' % (k, red))
-
-        e = np.linalg.norm(xx - x)
-        if e < error:
-            break
-        else:
-            x = np.copy(xx)
-            print('The current x is: ', x)
-        k += 1
-    return xx, k, obj
-
-
-def BFGS(x, xx, A, b, alpha, D, epsi, error):
-    k = 0
-    print("x的取值的迭代过程：")
-    print(x)
-    print(xx)
-    obj = []
-    while (1):
-        p = xx - x
-
-        delta_x = 2 * x + alpha * np.dot(A.T, np.dot(A, x) - b)
-        delta_xx = 2 * xx + alpha * np.dot(A.T, np.dot(A, x) - b)
-        q = delta_xx - delta_x
-
-        tao = np.dot(np.dot(q.T, D), q)
-
-        temp1 = p / np.dot(p.T, q)
-        temp2 = np.dot(D, q) / tao
-        v = temp1 - temp2
-
-        part_2 = np.dot(p, p.T) / np.dot(p, q.T)
-        part_3 = np.dot(np.dot(np.dot(D, q), q.T), D.T) / np.dot(
-            np.dot(q.T, D), q)
-        part_4 = epsi * np.dot(np.dot(tao, v), v.T)
-        DD = D + part_2 - part_3 + part_4
-
-        xxx = xx - alpha * np.dot(DD, delta_xx)
-
-        red = np.linalg.norm(xxx)**2 + (alpha / 2) * np.linalg.norm(A @ xxx -
-                                                                    b)**2
-        obj.append(red)
-        print('The %dth iteration, target value is %f' % (k, red))
-
-        e = np.linalg.norm(xxx - xx)
-        if e < error:
-            break
-        else:
-            x = np.copy(xx)
-            xx = np.copy(xxx)
-            D = np.copy(DD)
-            print('The current x is: ', xx)
-        k += 1
-
-    return xxx, k, obj
-
-
 def ADMM(A, b, alpha=0.1, beta=0.01, show_x=True, show_graph=True, log_int=1):
     #ADMM(x, alpha, landa, A, b, error, beta, z):
     n = A.shape[1]
@@ -93,8 +24,8 @@ def ADMM(A, b, alpha=0.1, beta=0.01, show_x=True, show_graph=True, log_int=1):
     print('The initial target value is %f' % (red))
     obj = []
     p = random.uniform(1.5, 1.8)
-    I = np.identity(len(A[0]))
-    zero=np.zeros(len(b))
+    I = np.identity(n)
+    zero=np.zeros(n)
     zero=zero.T
     
     while (1):
@@ -122,7 +53,8 @@ def ADMM(A, b, alpha=0.1, beta=0.01, show_x=True, show_graph=True, log_int=1):
             x = np.copy(xx)
             z = np.copy(zz)
             landa = np.copy(landalanda)
-            print('The current x is: ', x)
+            if show_x:
+                print('The current x is: ', x)
         k += 1
 
     print("Final x: ", xx)
@@ -168,6 +100,3 @@ def main():
     draw(obj)
     print("最终迭代结果: x：", xx)
     print("共进行了", count, "次迭代")
-
-
-main()

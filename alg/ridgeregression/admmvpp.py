@@ -3,10 +3,11 @@
 import numpy as np
 from math import sqrt
 import matplotlib.pyplot as plt
+from alg.utils import *
 #from scipy.interpolate import spline
 
 
-def ADMM_VPP(A, b, alpha=0.1, beta=0.01, show_x=True, show_graph=True, log_int=1, show_penalty=True):
+def ADMM(A, b, alpha=0.1, beta=0.01, show_x=True, show_graph=True, log_int=1, show_penalty=True):
     n = A.shape[1]
     x = np.random.rand(n, 1)
     z = np.random.rand(n, 1)
@@ -73,33 +74,6 @@ def ADMM_VPP(A, b, alpha=0.1, beta=0.01, show_x=True, show_graph=True, log_int=1
             
     return xx, k, obj
 
-def stop(A,xx,B,zz,z,b,landalanda,alpha):
-    rr=A @ xx + B * zz - b
-    ss=alpha * (A.T @ B @ (zz-z))
-    n=xx.shape[0]
-    epr=0.001
-    epa=1
-    epp=sqrt(n)*epa + epr * max(np.linalg.norm(A @ xx), np.linalg.norm(B @ zz), np.linalg.norm(b))
-    epd=sqrt(n)*epa + epr * np.linalg.norm(A.T @ landalanda)
-    if np.linalg.norm(rr,ord=2) <= epp and np.linalg.norm(ss,ord=2) <= epd:
-        return True
-    else:
-        return False
-
-def draw(obj):
-    x = np.zeros(len(obj))
-    for i in range(len(obj)):
-        x[i] = i * 0.1
-    '''
-    x_new=np.linspace(x.min(),x.max(),300)
-    obj_smooth=spline(x,obj,x_new)
-    '''
-    plt.scatter(x, obj, c='black')
-    plt.plot(x, obj, linewidth=1)
-    #plt.plot(x_new,obj_smooth,c='red')
-    plt.ylabel('obj')
-    plt.show()
-
 
 def main():
     #SD:
@@ -133,7 +107,7 @@ def main():
     alpha = 0.1
     error = 0.01
     beta = 0.01
-    xx, count, obj = ADMM(x, alpha, landa, A, b, error, beta, z)
+    xx, count, obj = ADMM_VPP(x, alpha, landa, A, b, error, beta, z)
     draw(obj)
     print("最终迭代结果: x：", xx)
     print("共进行了", count, "次迭代")
