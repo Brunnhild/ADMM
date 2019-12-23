@@ -4,6 +4,8 @@ import numpy as np
 from math import sqrt
 import random
 import matplotlib.pyplot as plt
+from alg.utils import stop
+from alg.utils import draw
 #from scipy.interpolate import spline
 
 
@@ -76,10 +78,19 @@ def BFGS(x, xx, A, b, alpha, D, epsi, error):
     return xxx, k, obj
 
 
-def ADMM(x, alpha, landa, A, b, error, beta, z):
+def ADMM(A, b, alpha=0.1, beta=0.01, show_x=True, show_graph=True, log_int=1):
+    #ADMM(x, alpha, landa, A, b, error, beta, z):
+    n = A.shape[1]
+    x = np.random.rand(n, 1)
+    z = np.random.rand(n, 1)
+    landa = np.random.rand(n, 1)
     k = 0
-    print("x的取值的迭代过程：")
-    print(x)
+    if show_x:
+        print("x starts with: ")
+        print(x)
+    red = np.linalg.norm(
+            x, ord=1) + (alpha / 2) * np.linalg.norm(A @ x - b)**2
+    print('The initial target value is %f' % (red))
     obj = []
     p = random.uniform(1.5, 1.8)
     I = np.identity(len(A[0]))
@@ -95,8 +106,9 @@ def ADMM(x, alpha, landa, A, b, error, beta, z):
 
         red = np.linalg.norm(
             xx, ord=1) + (alpha / 2) * np.linalg.norm(A @ xx - b)**2
-        obj.append(red)
-        print('The %dth iteration, target value is %f' % (k, red))
+        if k % log_int == 0:
+            obj.append(red)
+            print('The %dth iteration, target value is %f' % (k, red))
         '''
         xzk = np.vstack((x, z))
         xzkp = np.vstack((xx, zz))
@@ -112,35 +124,14 @@ def ADMM(x, alpha, landa, A, b, error, beta, z):
             landa = np.copy(landalanda)
             print('The current x is: ', x)
         k += 1
+
+    print("Final x: ", xx)
+    print("Total steps: ", k)
+    
+    if show_graph:
+        draw(obj, log_int)
         
     return xx, k, obj
-
-def stop(A,xx,B,zz,z,b,landalanda,alpha):
-    rr=A @ xx + B * zz - b
-    ss=alpha * (A.T @ B @ (zz-z))
-    n=xx.shape[0]
-    epr=0.001
-    epa=1
-    epp=sqrt(n)*epa + epr * max(np.linalg.norm(A @ xx), np.linalg.norm(B @ zz), np.linalg.norm(b))
-    epd=sqrt(n)*epa + epr * np.linalg.norm(A.T @ landalanda)
-    if np.linalg.norm(rr,ord=2) <= epp and np.linalg.norm(ss,ord=2) <= epd:
-        return True
-    else:
-        return False
-
-def draw(obj):
-    x = np.zeros(len(obj))
-    for i in range(len(obj)):
-        x[i] = i * 0.1
-    '''
-    x_new=np.linspace(x.min(),x.max(),300)
-    obj_smooth=spline(x,obj,x_new)
-    '''
-    plt.scatter(x, obj, c='black')
-    plt.plot(x, obj, linewidth=1)
-    #plt.plot(x_new,obj_smooth,c='red')
-    plt.ylabel('obj')
-    plt.show()
 
 
 def main():
