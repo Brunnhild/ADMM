@@ -7,7 +7,7 @@ from alg.utils import *
 #from scipy.interpolate import spline
 
 
-def ADMM(A, b, alpha=0.1, beta=0.01, show_x=True, show_graph=True, log_int=1, show_penalty=True):
+def ADMM(A, b, alpha=0.1, beta=0.01, show_x=True, show_graph=True, log_int=1, show_penalty=True, max_step=-1):
     n = A.shape[1]
     x = np.random.rand(n, 1)
     z = np.random.rand(n, 1)
@@ -43,6 +43,8 @@ def ADMM(A, b, alpha=0.1, beta=0.01, show_x=True, show_graph=True, log_int=1, sh
         if e <= error:
             break
         '''
+        if k == max_step:
+            break
         if stop(I,xx,-I,zz,z,zero,landalanda,alpha):
             break
         else:

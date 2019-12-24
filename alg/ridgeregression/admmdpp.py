@@ -5,45 +5,55 @@ from alg.utils import stop
 from alg.utils import draw
 #from scipy.interpolate import spline
 
-def ADMM(A, b, alpha=0.1, beta=0.01, show_x=True, show_graph=True, log_int=1):
+
+def ADMM(A,
+         b,
+         alpha=0.1,
+         beta=0.01,
+         show_x=True,
+         show_graph=True,
+         log_int=1,
+         max_step=-1):
     #ADMM(x, alpha, landa, A, b, beta, z, D):
     n = A.shape[1]
     x = np.random.rand(n, 1)
     z = np.random.rand(n, 1)
     landa = np.random.rand(n, 1)
-    D = np.identity(n)
     k = 0
     if show_x:
         print("x starts with: ")
         print(x)
-    red = np.linalg.norm(
-            x, ord=1) + (alpha / 2) * np.linalg.norm(A @ x - b)**2
+    red = np.linalg.norm(x, ord=1) + (alpha / 2) * np.linalg.norm(A @ x - b)**2
     print('The initial target value is %f' % (red))
-    print("x的取值的迭代过程：")
-    print(x)
     obj = []
     I = np.identity(n)
-    zero=np.zeros(n)
-    zero=zero.T
-    zeros=np.zeros((n,n))
+    one = np.ones((n, 1))
+    zero = np.zeros((n, 1))
+    zeros = np.zeros((n, n))
+    D = np.eye(n)
+    D *= beta
 
-    while(1):
-        temp1=np.linalg.inv(alpha * (A.T @ A) + D)
-        temp2=alpha * (A.T @ b) + (D @ z) - landa
-        xx=temp1 @ temp2
+    while (1):
+        temp1 = np.linalg.inv(alpha * (A.T @ A) + D)
+        temp2 = alpha * (A.T @ b) + (D @ z) - landa
+        xx = temp1 @ temp2
 
-        temp1=np.linalg.inv(2*I + D)
-        temp2=landa + D @ xx
-        zz=temp1 @ temp2
+        temp1 = np.linalg.inv(2 * I + D)
+        temp2 = landa + D @ xx
+        zz = temp1 @ temp2
 
-        landalanda=landa - D @ (xx-zz)
+        landalanda = landa + D @ (xx - zz)
         red = np.linalg.norm(
             xx, ord=1) + (alpha / 2) * np.linalg.norm(A @ xx - b)**2
+
         if k % log_int == 0:
             obj.append(red)
             print('The %dth iteration, target value is %f' % (k, red))
 
-        if stop(I,xx,-I,zz,z,zero,landalanda,alpha):
+        if k == max_step:
+            break
+
+        if stop(I, xx, -I, zz, z, zero, landalanda, alpha):
             break
         else:
             r = xx - zz
@@ -65,10 +75,10 @@ def ADMM(A, b, alpha=0.1, beta=0.01, show_x=True, show_graph=True, log_int=1):
             k += 1
     print("Final x: ", xx)
     print("Total steps: ", k)
-    
+
     if show_graph:
         draw(obj, log_int)
-        
+
     return xx, k, obj
 
 

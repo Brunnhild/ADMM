@@ -12,7 +12,8 @@ def ADMM(A,
          show_x=True,
          show_graph=True,
          log_int=1,
-         show_penalty=True):
+         show_penalty=True,
+         max_step=-1):
     n = A.shape[1]
     x = np.random.rand(n, 1)
     z = np.random.rand(n, 1)
@@ -25,8 +26,8 @@ def ADMM(A,
     print('The initial target value is %f' % (red))
     obj = []
     I = np.identity(n)
-    zero = np.zeros(n)
-    zero = zero.T
+    one = np.ones((n, 1))
+    zero = np.zeros((n, 1))
     zeros = np.zeros((n, n))
     D = np.eye(n)
     D *= beta
@@ -34,8 +35,10 @@ def ADMM(A,
         temp1 = np.linalg.inv(alpha * (A.T @ A) + D)
         temp2 = alpha * (A.T @ b) + (D @ z) - landa
         xx = temp1 @ temp2
+        
         zz = np.sign(xx + np.linalg.inv(D) @ landa) * np.maximum(
-            np.abs(xx + np.linalg.inv(D) @ landa) - np.linalg.inv(D), zeros)
+            np.abs(xx + np.linalg.inv(D) @ landa) - np.linalg.inv(D) @ one,
+            zero)
         landalanda = landa + D @ (xx - zz)
 
         red = np.linalg.norm(
@@ -43,6 +46,9 @@ def ADMM(A,
         if k % log_int == 0:
             obj.append(red)
             print('The %dth iteration, target value is %f' % (k, red))
+
+        if k == max_step:
+            break
 
         if stop(I, xx, -I, zz, z, zero, landalanda, alpha):
             break
