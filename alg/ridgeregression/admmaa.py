@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from alg.utils import *
 
 
-def ADMM(A, b, alpha=0.1, beta=0.01, show_x=True, show_graph=True, log_int=1):
+def ADMM(A, b, alpha=0.1, beta=0.01, show_x=True, show_graph=True, log_int=1, max_step=-1):
     n = A.shape[1]
     x = np.random.rand(n, 1)
     z = np.random.rand(n, 1)
@@ -29,7 +29,7 @@ def ADMM(A, b, alpha=0.1, beta=0.01, show_x=True, show_graph=True, log_int=1):
 
         zz = (landa + beta * xx) / (2 + beta)
 
-        landalanda = landa - beta * np.abs(xx - zz)
+        landalanda = landa + beta * (xx - zz)
 
         red = np.linalg.norm(
             xx, ord=1) + (alpha / 2) * np.linalg.norm(A @ xx - b)**2
@@ -46,7 +46,7 @@ def ADMM(A, b, alpha=0.1, beta=0.01, show_x=True, show_graph=True, log_int=1):
         if e <= error:
             break
         '''
-        if stop(I,xx,-I,zz,z,zero,landalanda,alpha):
+        if stop(I,xx,-I,zz,z,zero,landalanda,alpha) or k == max_step:
             break
         else:
             x = np.copy(xx)

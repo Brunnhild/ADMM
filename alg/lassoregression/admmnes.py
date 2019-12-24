@@ -7,7 +7,7 @@ from alg.utils import *
 #from scipy.interpolate import spline
 
 
-def ADMM(A, b, alpha=0.1, beta=0.01, show_x=True, show_graph=True, log_int=1):
+def ADMM(A, b, alpha=0.1, beta=0.01, show_x=True, show_graph=True, log_int=1, max_step=-1):
     n = A.shape[1]
     nl = 0
     x = np.random.rand(n, 1)
@@ -43,7 +43,7 @@ def ADMM(A, b, alpha=0.1, beta=0.01, show_x=True, show_graph=True, log_int=1):
             obj.append(red)
             print('The %dth iteration, target value is %f' % (k, red))
         #A,xx,B,zz,z,b,landalanda,alpha
-        if stop(I, xx, -I, zz, z, zero, landalanda, alpha):
+        if stop(I, xx, -I, zz, z, zero, landalanda, alpha) or k == max_step:
             break
         else:
             x = xx

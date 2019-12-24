@@ -7,7 +7,7 @@ from alg.utils import *
 #from scipy.interpolate import spline
 
 
-def ADMM(A, b, alpha=0.1, beta=0.01, show_x=True, show_graph=True, log_int=1):
+def ADMM(A, b, alpha=0.1, beta=0.01, show_x=True, show_graph=True, log_int=1, max_step=-1):
     n = A.shape[1]
     nl = 0
     x = np.random.rand(n, 1)
@@ -27,14 +27,22 @@ def ADMM(A, b, alpha=0.1, beta=0.01, show_x=True, show_graph=True, log_int=1):
     yx = np.copy(x)
 
     while (1):
+
+        lk = 1 / (k + 1)
+        if k < 2:
+            lk = 0
         nl_new = (1 + sqrt(1 + 4 * nl * nl)) / 2
         gamma = (1 - nl) / nl_new
         temp1 = np.linalg.inv(alpha * (A.T @ A) + beta * I)
         temp2 = alpha * (A.T @ b) + beta * z - landa
         y_xx = temp1 @ temp2
-        xx = (1 - gamma) * y_xx + gamma * yx
+        # xx = (1 - gamma) * y_xx + gamma * yx
+        xx = y_xx + lk * (y_xx - yx)
+        # xx = y_xx
         y_zz = (landa + beta * xx) / (2 + beta)
-        zz = (1 - gamma) * y_zz + gamma * yz
+        # zz = (1 - gamma) * y_zz + gamma * yz
+        zz = y_zz + lk * (y_zz - yz)
+        # zz = y_zz
         landalanda = landa + beta * (xx - zz)
         red = np.linalg.norm(
             xx, ord=1) + (alpha / 2) * np.linalg.norm(A @ xx - b)**2
@@ -42,7 +50,7 @@ def ADMM(A, b, alpha=0.1, beta=0.01, show_x=True, show_graph=True, log_int=1):
             obj.append(red)
             print('The %dth iteration, target value is %f' % (k, red))
         #A,xx,B,zz,z,b,landalanda,alpha
-        if stop(I, xx, -I, zz, z, zero, landalanda, alpha):
+        if stop(I, xx, -I, zz, z, zero, landalanda, alpha) or k == max_step:
             break
         else:
             x = xx
@@ -80,7 +88,3 @@ def main():
 
     print("最终迭代结果: x：", xx)
     print("共进行了", count, "次迭代")
-
-
-if __name__ == '__main__':
-    main()
